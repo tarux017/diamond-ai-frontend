@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diamond AI - The Future of Automated Customer Interaction</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+
+    <!-- Three.js for 3D Visuals -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <!-- PayPal SDK -->
+    <!-- IMPORTANT: Replace YOUR_PAYPAL_CLIENT_ID with your actual PayPal Client ID -->
+    <script src="https://www.paypal.com/sdk/js?client-id=YOUR_PAYPAL_CLIENT_ID&currency=USD"></script>
+
+    <!-- Custom Styles -->
+    <style>
+        :root {
+            --gold: #facc15;
+            --dark-gold: #ca8a04;
+            --bg-color: #0c0a09;
+            --text-color: #d6d3d1;
+        }
+        @keyframes word-in {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(250, 204, 21, 0.4), 0 0 30px rgba(250, 204, 21, 0.2); }
+            50% { box-shadow: 0 0 35px rgba(250, 204, 21, 0.7), 0 0 45px rgba(250, 204, 21, 0.4); }
+        }
+        @keyframes pulse-light {
+             0%, 100% { box-shadow: 0 0 20px rgba(250, 204, 21, 0.5); }
+             50% { box-shadow: 0 0 35px rgba(250, 204, 21, 0.8); }
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow-x: hidden;
+        }
+        #aurora-background {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+            background: radial-gradient(ellipse at 70% 30%, hsla(45, 93%, 54%, 0.15) 0%, transparent 50%),
+                        radial-gradient(ellipse at 30% 70%, hsla(39, 92%, 56%, 0.15) 0%, transparent 50%);
+            animation: pulse-light 10s infinite alternate;
+        }
+        h1, h2, h3 { font-family: 'Inter', sans-serif; }
+        .gradient-text {
+            background: linear-gradient(to right, #fde047, #d97706);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .cta-button {
+            position: relative; overflow: hidden;
+            background: linear-gradient(to right, var(--gold), var(--dark-gold));
+            transition: all 0.3s ease; color: #1c1917;
+        }
+        .cta-button:hover {
+             animation: pulse-glow 1.5s infinite;
+        }
+        
+        .header-glass {
+            background: rgba(12, 10, 9, 0.8);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid #44403c;
+        }
+        .card {
+            border: 1px solid #44403c;
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            transform-style: preserve-3d;
+            background-color: rgba(28, 25, 23, 0.5);
+        }
+        .card:hover {
+             box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+             border-color: var(--gold);
+        }
+        .animate-on-scroll { opacity: 0; transform: translateY(40px); transition: opacity 0.8s ease-out, transform 0.8s ease-out; }
+        .animate-on-scroll.is-visible { opacity: 1; transform: translateY(0); }
+        
+        /* Side Assistant Styles */
+        #assistant-fab {
+            position: fixed; bottom: 2rem; right: 2rem;
+            width: 60px; height: 60px;
+            background: linear-gradient(to right, var(--gold), var(--dark-gold));
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 10px 25px rgba(250, 204, 21, 0.3);
+            cursor: pointer; z-index: 1000;
+            animation: pulse-light 2s infinite;
+            transition: transform 0.3s ease;
+        }
+        #assistant-fab:hover { transform: scale(1.1); }
+        #assistant-panel {
+            position: fixed; top: 0; right: 0;
+            width: 100%; max-width: 400px; height: 100%;
+            background-color: #1c1917; /* Stone 900 */
+            z-index: 1001;
+            transform: translateX(100%);
+            transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+            box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+            display: flex; flex-direction: column;
+        }
+        #assistant-panel.is-open { transform: translateX(0); }
+        #assistant-backdrop {
+            position: fixed; inset: 0;
+            background-color: rgba(0,0,0,0.7);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+        #assistant-backdrop.is-visible { opacity: 1; pointer-events: auto; }
+        .assistant-step { display: none; }
+        .assistant-step.is-active { display: block; }
+        .headline-word {
+            display: inline-block;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: word-in 0.6s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+        }
+    </style>
+</head>
+<body class="antialiased">
+    <div id="aurora-background"></div>
+
+    <!-- Header -->
+    <header id="header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300 header-glass">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="text-2xl font-bold text-white">Diamond <span class="gradient-text">AI</span></div>
+                <nav class="hidden md:flex items-center space-x-8">
+                    <a href="#demo" class="text-gray-300 hover:text-white font-medium transition">Demo</a>
+                    <a href="#features" class="text-gray-300 hover:text-white font-medium transition">Features</a>
+                    <a href="#pricing" class="text-gray-300 hover:text-white font-medium transition">Pricing</a>
+                </nav>
+                <a href="#pricing" class="hidden md:block cta-button font-bold py-2 px-6 rounded-lg shadow-lg">Get Started</a>
+                <button id="mobile-menu-button" class="md:hidden text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                </button>
+            </div>
+        </div>
+        <div id="mobile-menu" class="hidden md:hidden px-6 pb-4 bg-stone-950/90 shadow-lg">
+            <a href="#demo" class="block py-2 text-gray-300 hover:text-white font-medium">Demo</a>
+            <a href="#features" class="block py-2 text-gray-300 hover:text-white font-medium">Features</a>
+            <a href="#pricing" class="block py-2 text-gray-300 hover:text-white font-medium">Pricing</a>
+            <a href="#pricing" class="block mt-2 cta-button font-bold py-2 px-6 rounded-lg shadow-lg text-center">Get Started</a>
+        </div>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section class="min-h-screen flex items-center text-center relative overflow-hidden">
+             <div id="dynamic-wave-container" class="absolute inset-0 z-0 opacity-20"></div>
+             <div class="container mx-auto px-6 relative z-10 pt-20">
+                 <h1 id="hero-headline" class="text-5xl md:text-7xl font-extrabold text-white leading-tight mb-6" style="line-height: 1.2;"></h1>
+                 <p class="text-lg md:text-xl max-w-3xl mx-auto text-gray-400 mb-10 animate-on-scroll" style="transition-delay: 1.2s;">
+                    Our intelligent calling agent provides a seamless, sophisticated booking experience, 24/7, allowing you to focus on delivering excellence.
+                 </p>
+                 <div class="flex justify-center items-center gap-4 animate-on-scroll" style="transition-delay: 1.4s;">
+                     <a href="#pricing" class="cta-button text-stone-900 font-bold py-4 px-10 rounded-lg shadow-lg text-lg">Claim Your Free Trial</a>
+                     <button id="watch-demo-button" class="relative font-bold text-lg text-white py-4 px-10 rounded-lg border border-stone-600 bg-stone-900/50 backdrop-blur-sm hover:border-yellow-400 transition">Watch Demo</button>
+                 </div>
+
+                 <div class="mt-20 animate-on-scroll" style="transition-delay: 1.6s;">
+                    <p class="text-sm text-stone-500 uppercase tracking-widest mb-4">Trusted by leading local businesses</p>
+                    <div class="flex justify-center items-center gap-8 md:gap-12 text-stone-400 font-semibold">
+                        <span>The Luxe Salon</span>
+                        <span>Oakwood Dental</span>
+                        <span>Gourmet Bistro</span>
+                        <span>Prestige Motors</span>
+                    </div>
+                </div>
+             </div>
+        </section>
+        
+        <!-- Interactive AI Demo Section -->
+        <section id="demo" class="py-32">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-16 animate-on-scroll">
+                    <h2 class="text-4xl md:text-5xl font-bold text-white">Experience It Now</h2>
+                    <p class="text-gray-400 mt-4 max-w-2xl mx-auto">Interact with a live demo of our AI to book a fictional appointment.</p>
+                </div>
+                <div class="max-w-2xl mx-auto card p-4 sm:p-6 rounded-2xl animate-on-scroll">
+                    <div id="chat-window" class="h-96 overflow-y-auto p-4 space-y-4 mb-4">
+                        <!-- Chat messages will be appended here -->
+                    </div>
+                    <div class="flex gap-2">
+                        <input type="text" id="chat-input" placeholder="Type your message..." class="flex-grow bg-stone-800 border border-stone-700 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500 transition">
+                        <button id="chat-send" class="cta-button font-bold py-3 px-6 rounded-lg">Send</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section id="features" class="py-24 bg-stone-900/50">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-16 animate-on-scroll">
+                    <h2 class="text-4xl md:text-5xl font-bold text-white">An Unfair Advantage for Your Business</h2>
+                    <p class="text-gray-400 mt-4 max-w-2xl mx-auto">Diamond AI is more than a tool; it's a new, perpetually perfect member of your team.</p>
+                </div>
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div class="p-8 rounded-lg card animate-on-scroll">
+                        <h3 class="text-xl font-bold text-white mb-3">Always Available</h3>
+                        <p class="text-gray-400">Operates 24/7/365, ensuring you capture every opportunity, day or night.</p>
+                    </div>
+                    <div class="p-8 rounded-lg card animate-on-scroll" style="transition-delay:100ms">
+                        <h3 class="text-xl font-bold text-white mb-3">Flawless Memory</h3>
+                        <p class="text-gray-400">Remembers every detail, confirms every booking, and never makes a mistake.</p>
+                    </div>
+                    <div class="p-8 rounded-lg card animate-on-scroll" style="transition-delay:200ms">
+                        <h3 class="text-xl font-bold text-white mb-3">Bespoke Persona</h3>
+                        <p class="text-gray-400">Customize the AI's voice and script to perfectly match your brand's exclusive identity.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Testimonials Section -->
+        <section id="testimonials" class="py-24">
+            <div class="container mx-auto px-6 animate-on-scroll">
+                <div class="text-center mb-16">
+                    <h2 class="text-4xl md:text-5xl font-bold text-white">Experience the Transformation</h2>
+                </div>
+                <div class="max-w-3xl mx-auto bg-stone-800/50 p-10 rounded-xl card">
+                    <p class="text-xl text-center text-white italic">"Diamond AI has fundamentally changed our business. We're capturing 30% more bookings, and our staff has been freed up to provide the premium in-person experience our clients expect. It paid for itself in the first week."</p>
+                    <div class="text-center mt-6">
+                        <p class="font-bold text-lg gradient-text">Anjali Sharma</p>
+                        <p class="text-gray-400">Owner, The Luxe Salon</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Pricing Section -->
+        <section id="pricing" class="py-24 bg-stone-900/50">
+             <div class="container mx-auto px-6">
+                <div class="text-center mb-16 animate-on-scroll">
+                    <h2 class="text-4xl md:text-5xl font-bold text-white">Find Your Perfect Plan</h2>
+                    <p class="text-gray-400 mt-4">Invest in excellence. Cancel anytime.</p>
+                </div>
+                <div class="grid lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                    <!-- Growth Plan -->
+                    <div class="p-8 rounded-2xl relative card animate-on-scroll flex flex-col">
+                        <h3 class="text-2xl font-bold text-white text-center">Growth</h3>
+                        <p class="text-center text-gray-400 mt-2">For ambitious businesses</p>
+                        <div class="text-center my-8">
+                            <span class="text-5xl font-extrabold text-white">$59</span>
+                            <span class="text-gray-400">/ month</span>
+                        </div>
+                        <ul class="space-y-4 text-gray-300 flex-grow">
+                            <li class="flex items-center"><svg class="w-5 h-5 text-yellow-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>Up to 500 bookings</li>
+                            <li class="flex items-center"><svg class="w-5 h-5 text-yellow-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>Calendar Integration</li>
+                            <li class="flex items-center"><svg class="w-5 h-5 text-yellow-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>SMS & Email Alerts</li>
+                        </ul>
+                        <div id="paypal-growth-button-container" class="mt-8 z-10"></div>
+                    </div>
+                    <!-- Premier Plan -->
+                    <div class="p-8 rounded-2xl border-2 border-yellow-400 relative card animate-on-scroll flex flex-col" style="transition-delay: 150ms;">
+                        <div class="absolute top-0 -translate-y-1/2 left-1/2 -translate-x-1/2">
+                            <span class="bg-yellow-400 text-gray-900 text-xs font-bold px-3 py-1 rounded-full uppercase">Recommended</span>
+                        </div>
+                        <h3 class="text-2xl font-bold text-white text-center">Premier</h3>
+                        <p class="text-center text-gray-400 mt-2">For market leaders</p>
+                        <div class="text-center my-8">
+                            <span class="text-5xl font-extrabold text-white">$119</span>
+                            <span class="text-gray-400">/ month</span>
+                        </div>
+                        <ul class="space-y-4 text-gray-300 flex-grow">
+                            <li class="flex items-center"><svg class="w-5 h-5 text-yellow-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>Unlimited Bookings</li>
+                            <li class="flex items-center"><svg class="w-5 h-5 text-yellow-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>All Growth Features</li>
+                            <li class="flex items-center"><svg class="w-5 h-5 text-yellow-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>Bespoke Persona</li>
+                            <li class="flex items-center"><svg class="w-5 h-5 text-yellow-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>Advanced Analytics</li>
+                        </ul>
+                        <div id="paypal-premier-button-container" class="mt-8 z-10"></div>
+                    </div>
+                    <!-- Bespoke Plan -->
+                     <div class="p-8 rounded-2xl relative card animate-on-scroll flex flex-col" style="transition-delay: 300ms;">
+                        <h3 class="text-2xl font-bold text-white text-center">Bespoke</h3>
+                        <p class="text-center text-gray-400 mt-2">For the enterprise</p>
+                        <div class="text-center my-8">
+                           <span class="text-3xl font-extrabold text-white">Custom Solutions</span>
+                        </div>
+                        <ul class="space-y-4 text-gray-300 flex-grow">
+                             <li class="flex items-center"><svg class="w-5 h-5 text-yellow-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>Dedicated Infrastructure</li>
+                            <li class="flex items-center"><svg class="w-5 h-5 text-yellow-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>API Access</li>
+                            <li class="flex items-center"><svg class="w-5 h-5 text-yellow-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>Priority Support</li>
+                        </ul>
+                        <a href="mailto:tarux007@gmail.com" class="block w-full text-center mt-8 py-3 px-6 rounded-lg bg-gray-700 text-white font-bold hover:bg-gray-600 transition">Contact Sales</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-stone-800 py-8 bg-stone-900/50">
+        <div class="container mx-auto px-6 text-center text-gray-500">
+            <p>&copy; 2025 Diamond AI. An investment in excellence.</p>
+            <div class="mt-4 flex justify-center items-center space-x-6">
+                <a href="mailto:tarux007@gmail.com" class="hover:text-white transition">tarux007@gmail.com</a>
+                <span class="text-gray-600">|</span>
+                <a href="tel:+917974953703" class="hover:text-white transition">+91 79749 53703</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Video Modal -->
+    <div id="video-modal" class="fixed inset-0 bg-black/90 z-[99999] hidden flex items-center justify-center p-4">
+        <div id="video-modal-content" class="bg-black relative w-full max-w-3xl rounded-lg shadow-2xl aspect-video transform scale-90 transition-transform duration-300">
+            <button id="close-modal-button" class="absolute -top-4 -right-4 w-10 h-10 bg-white text-black rounded-full text-2xl z-10 flex items-center justify-center">&times;</button>
+            <div id="video-container" class="w-full h-full"></div>
+        </div>
+    </div>
+    
+    <!-- AI Setup Assistant FAB -->
+    <button id="assistant-fab">
+        <svg class="w-8 h-8 text-stone-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+    </button>
+    
+    <!-- AI Setup Assistant Panel -->
+    <div id="assistant-backdrop"></div>
+    <div id="assistant-panel" class="p-8">
+        <div class="flex items-center justify-between mb-8">
+            <h3 class="text-2xl font-bold text-white">Setup Assistant</h3>
+            <button id="close-assistant-button" class="text-3xl text-stone-400 hover:text-white transition">&times;</button>
+        </div>
+        
+        <!-- Progress Bar -->
+        <div class="w-full bg-stone-700 rounded-full h-2.5 mb-8">
+            <div id="assistant-progress-bar" class="bg-gradient-to-r from-dark-gold to-gold h-2.5 rounded-full" style="width: 20%; transition: width 0.5s ease;"></div>
+        </div>
+
+        <div id="assistant-steps" class="flex-grow">
+            <!-- Step 1: Welcome -->
+            <div class="assistant-step is-active" data-step="1">
+                <h4 class="text-xl font-bold text-white mb-4">Welcome to Diamond AI!</h4>
+                <p class="text-stone-400 mb-6">Let's get your AI agent ready in a few simple steps. First, what is your business name?</p>
+                <input type="text" id="assistant-business-name" placeholder="e.g., The Luxe Salon" class="w-full bg-stone-800 border border-stone-700 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500 transition">
+            </div>
+            <!-- Step 2: Business Type -->
+            <div class="assistant-step" data-step="2">
+                <h4 class="text-xl font-bold text-white mb-4">Business Type</h4>
+                <p class="text-stone-400 mb-6">Great. What industry are you in? This helps us tailor the AI's language.</p>
+                <input type="text" id="assistant-business-type" placeholder="e.g., Dental Clinic, Restaurant" class="w-full bg-stone-800 border border-stone-700 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500 transition">
+            </div>
+            <!-- Step 3: Calendar -->
+            <div class="assistant-step" data-step="3">
+                <h4 class="text-xl font-bold text-white mb-4">Connect Your Calendar</h4>
+                <p class="text-stone-400 mb-6">Choose your calendar provider to sync appointments automatically.</p>
+                <div class="space-y-3">
+                     <button data-calendar="google" class="assistant-calendar-btn w-full text-left p-4 bg-stone-800 rounded-lg border border-stone-700 hover:border-yellow-500 transition">Google Calendar</button>
+                     <button data-calendar="outlook" class="assistant-calendar-btn w-full text-left p-4 bg-stone-800 rounded-lg border border-stone-700 hover:border-yellow-500 transition">Outlook Calendar</button>
+                </div>
+            </div>
+            <!-- Step 4: Hours -->
+             <div class="assistant-step" data-step="4">
+                <h4 class="text-xl font-bold text-white mb-4">Set Business Hours</h4>
+                <p class="text-stone-400 mb-6">Define your operating hours so the AI knows when to schedule bookings.</p>
+                <div class="flex items-center gap-2">
+                    <input type="time" id="assistant-start-time" value="09:00" class="w-full bg-stone-800 border border-stone-700 rounded-lg p-3 text-white">
+                    <span>to</span>
+                    <input type="time" id="assistant-end-time" value="17:00" class="w-full bg-stone-800 border border-stone-700 rounded-lg p-3 text-white">
+                </div>
+            </div>
+            <!-- Step 5: Complete -->
+             <div class="assistant-step" data-step="5">
+                <h4 class="text-xl font-bold text-white mb-4">Setup Complete!</h4>
+                <p class="text-stone-400 mb-6" id="assistant-complete-message">Congratulations! Your Diamond AI agent for '[Business Name]' is now active and ready to handle your calls.</p>
+                <p class="text-stone-400">You can customize advanced options in your dashboard after signing up.</p>
+                <p id="server-response-message" class="mt-4 text-sm text-green-400"></p>
+            </div>
+        </div>
+        
+        <div class="mt-auto flex justify-between">
+             <button id="assistant-back-button" class="font-bold text-lg text-white py-3 px-8 rounded-lg border border-stone-600 bg-stone-900/50 backdrop-blur-sm hover:border-yellow-400 transition opacity-0">Back</button>
+             <button id="assistant-next-button" class="cta-button font-bold py-3 px-8 rounded-lg">Next</button>
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- Header & Menu ---
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuButton.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+            
+            // --- Headline Animation ---
+            const headline = document.getElementById('hero-headline');
+            const text = "Never Miss a Booking <br/><span class='gradient-text'>Again.</span>";
+            const words = text.split(/ |<br\/>/);
+            let html = '';
+            let delay = 0;
+            words.forEach(word => {
+                if (word === '') return;
+                if(word.includes('<span')) {
+                    html += `<span class="headline-word" style="animation-delay: ${delay * 0.15}s">${word}</span> `;
+                } else {
+                    html += `<span class="headline-word" style="animation-delay: ${delay * 0.15}s">${word}</span> `;
+                }
+                delay++;
+            });
+            headline.innerHTML = text.replace(/Never Miss a Booking/, words.slice(0, 4).map((w, i) => `<span class="headline-word" style="animation-delay: ${i * 0.15}s">${w}</span>`).join(' '))
+                                     .replace(/Again./, `<span class="headline-word gradient-text" style="animation-delay: 0.6s">Again.</span>`);
+
+
+            // --- 3D Card Tilt Effect ---
+            document.querySelectorAll('.card').forEach(card => {
+                card.addEventListener('mousemove', (e) => {
+                    const rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    const { width, height } = rect;
+                    const rotateX = (y / height - 0.5) * -15;
+                    const rotateY = (x / width - 0.5) * 15;
+                    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+                });
+                card.addEventListener('mouseleave', () => {
+                    card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0)';
+                });
+            });
+
+            // --- Animate on Scroll ---
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-visible');
+                    }
+                });
+            }, { threshold: 0.1 });
+            document.querySelectorAll('.animate-on-scroll').forEach(el => observer.observe(el));
+
+            // --- Video Modal ---
+            const watchDemoButton = document.getElementById('watch-demo-button');
+            const videoModal = document.getElementById('video-modal');
+            const videoModalContent = document.getElementById('video-modal-content');
+            const closeModalButton = document.getElementById('close-modal-button');
+            const videoContainer = document.getElementById('video-container');
+
+            watchDemoButton.addEventListener('click', () => {
+                videoModal.classList.remove('hidden');
+                setTimeout(() => videoModalContent.classList.remove('scale-90'), 50);
+                videoContainer.innerHTML = `<iframe class="w-full h-full" src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+            });
+            
+            const closeModal = () => {
+                videoModalContent.classList.add('scale-90');
+                setTimeout(() => {
+                    videoModal.classList.add('hidden');
+                    videoContainer.innerHTML = '';
+                }, 300);
+            };
+
+            closeModalButton.addEventListener('click', closeModal);
+            videoModal.addEventListener('click', (e) => {
+                if (e.target === videoModal) closeModal();
+            });
+
+            // --- Chat Demo ---
+            const chatWindow = document.getElementById('chat-window');
+            const chatInput = document.getElementById('chat-input');
+            const chatSend = document.getElementById('chat-send');
+            
+            const addMessage = (sender, text) => {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `p-3 rounded-lg max-w-xs ${sender === 'user' ? 'bg-yellow-500 text-black ml-auto' : 'bg-stone-700 text-white'}`;
+                messageDiv.textContent = text;
+                chatWindow.appendChild(messageDiv);
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+            };
+
+            const handleChat = () => {
+                const userInput = chatInput.value.trim();
+                if (userInput) {
+                    addMessage('user', userInput);
+                    chatInput.value = '';
+                    setTimeout(() => {
+                        addMessage('ai', "Thank you for your message. This is a demo. Our full AI would handle your request now.");
+                    }, 1000);
+                }
+            };
+            
+            chatSend.addEventListener('click', handleChat);
+            chatInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') handleChat();
+            });
+            
+            addMessage('ai', "Hello! I'm the Diamond AI demo. How can I help you book an appointment today?");
+
+            // --- AI Setup Assistant ---
+            const assistantFab = document.getElementById('assistant-fab');
+            const assistantPanel = document.getElementById('assistant-panel');
+            const assistantBackdrop = document.getElementById('assistant-backdrop');
+            const closeAssistantButton = document.getElementById('close-assistant-button');
+            const assistantSteps = Array.from(document.querySelectorAll('.assistant-step'));
+            const progressBar = document.getElementById('assistant-progress-bar');
+            const backButton = document.getElementById('assistant-back-button');
+            const nextButton = document.getElementById('assistant-next-button');
+            let currentStep = 1;
+
+            const setupState = {
+                businessName: '',
+                businessType: '',
+                calendarProvider: '',
+                startTime: '09:00',
+                endTime: '17:00'
+            };
+            
+            const openAssistant = () => {
+                assistantPanel.classList.add('is-open');
+                assistantBackdrop.classList.add('is-visible');
+            };
+
+            const closeAssistant = () => {
+                assistantPanel.classList.remove('is-open');
+                assistantBackdrop.classList.remove('is-visible');
+            };
+
+            assistantFab.addEventListener('click', openAssistant);
+            closeAssistantButton.addEventListener('click', closeAssistant);
+            assistantBackdrop.addEventListener('click', closeAssistant);
+
+            const updateStepUI = () => {
+                assistantSteps.forEach(step => {
+                    step.classList.toggle('is-active', parseInt(step.dataset.step) === currentStep);
+                });
+                const progress = (currentStep / assistantSteps.length) * 100;
+                progressBar.style.width = `${progress}%`;
+                backButton.classList.toggle('opacity-0', currentStep === 1);
+                nextButton.textContent = currentStep === assistantSteps.length ? 'Finish' : 'Next';
+            };
+
+            nextButton.addEventListener('click', async () => {
+                if (currentStep < assistantSteps.length) {
+                    currentStep++;
+                    updateStepUI();
+                } else {
+                    // --- FINAL STEP: SEND DATA TO BACKEND ---
+                    setupState.businessName = document.getElementById('assistant-business-name').value;
+                    setupState.businessType = document.getElementById('assistant-business-type').value;
+                    setupState.startTime = document.getElementById('assistant-start-time').value;
+                    setupState.endTime = document.getElementById('assistant-end-time').value;
+
+                    // Display a final confirmation message
+                    document.getElementById('assistant-complete-message').textContent = `Congratulations! Your Diamond AI agent for '${setupState.businessName}' is now active.`;
+                    const responseMessageEl = document.getElementById('server-response-message');
+                    responseMessageEl.textContent = 'Saving your configuration...';
+                    
+                    try {
+                        // **IMPORTANT**: Replace this URL with your actual Vercel backend URL
+                        const backendUrl = 'https://diamond-ai-backend.vercel.app/api/assistant-setup'; 
+                        
+                        const response = await fetch(backendUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(setupState),
+                        });
+
+                        const result = await response.json();
+
+                        if (response.ok) {
+                            responseMessageEl.textContent = 'Configuration saved successfully!';
+                            responseMessageEl.classList.remove('text-red-400');
+                            responseMessageEl.classList.add('text-green-400');
+                        } else {
+                            throw new Error(result.message || 'Failed to save data.');
+                        }
+
+                    } catch (error) {
+                        console.error('Error sending data to backend:', error);
+                        responseMessageEl.textContent = `Error: ${error.message}`;
+                        responseMessageEl.classList.remove('text-green-400');
+                        responseMessageEl.classList.add('text-red-400');
+                    }
+                }
+            });
+
+            backButton.addEventListener('click', () => {
+                if (currentStep > 1) {
+                    currentStep--;
+                    updateStepUI();
+                }
+            });
+
+            document.querySelectorAll('.assistant-calendar-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    setupState.calendarProvider = btn.dataset.calendar;
+                    // Provide visual feedback for selection
+                    document.querySelectorAll('.assistant-calendar-btn').forEach(b => b.classList.remove('border-yellow-500'));
+                    btn.classList.add('border-yellow-500');
+                    // Automatically move to next step
+                    if (currentStep === 3) {
+                         nextButton.click();
+                    }
+                });
+            });
+
+            // --- PayPal Payment Integration ---
+            const initPayPal = () => {
+                const backendUrl = 'https://diamond-ai-backend.vercel.app';
+
+                function renderPayPalButtons(containerId, planName, amount) {
+                     if (typeof paypal === 'undefined') {
+                        console.error("PayPal SDK has not loaded yet.");
+                        return;
+                    }
+                    paypal.Buttons({
+                        createOrder: async function(data, actions) {
+                            // Call your backend to create the order
+                            try {
+                                const response = await fetch(`${backendUrl}/api/paypal/create-order`, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                        plan_name: planName,
+                                        amount: amount
+                                    })
+                                });
+                                const order = await response.json();
+                                if(order.id) {
+                                    return order.id;
+                                } else {
+                                    console.error('Failed to create PayPal order:', order);
+                                    alert('Could not initiate PayPal checkout. Please try again.');
+                                }
+                            } catch (err) {
+                                console.error('Error calling create-order:', err);
+                                alert('An error occurred. Please try again.');
+                            }
+                        },
+                        onApprove: async function(data, actions) {
+                            // Call your backend to capture the order
+                            try {
+                                const response = await fetch(`${backendUrl}/api/paypal/capture-order`, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ orderID: data.orderID })
+                                });
+                                const details = await response.json();
+                                 // Show a success message to the buyer
+                                alert('Transaction completed by ' + details.payer.name.given_name + '! Thank you for your purchase.');
+                            } catch(err) {
+                                console.error('Error calling capture-order:', err);
+                                alert('Payment could not be completed. Please contact support.');
+                            }
+                        },
+                        onError: function(err) {
+                            console.error('PayPal Checkout Error:', err);
+                            alert('An error occurred during the payment process. Please try again.');
+                        }
+                    }).render(`#${containerId}`);
+                }
+
+                renderPayPalButtons('paypal-growth-button-container', 'Growth Plan', '59.00');
+                renderPayPalButtons('paypal-premier-button-container', 'Premier Plan', '119.00');
+            };
+
+            // Poll to check if PayPal SDK is loaded
+            const payPalCheckInterval = setInterval(() => {
+                if (window.paypal) {
+                    clearInterval(payPalCheckInterval);
+                    initPayPal();
+                }
+            }, 100);
+
+
+            // --- Dynamic 3D Wave background ---
+            let scene, camera, renderer, analyser, uniforms;
+            const container = document.getElementById('dynamic-wave-container');
+
+            function initWave() {
+                scene = new THREE.Scene();
+                camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 1, 10000);
+                camera.position.z = 300;
+
+                // FIX: Initialize renderer before using it.
+                renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+                
+                const listener = new THREE.AudioListener();
+                const audio = new THREE.Audio(listener);
+                const mediaElement = new Audio('https://s3-us-west-2.amazonaws.com/s.cdpn.io/85817/apo.mp3'); // Placeholder for potential audio
+                mediaElement.loop = true;
+
+                analyser = new THREE.AudioAnalyser(audio, 32);
+
+                const format = (renderer.capabilities.isWebGL2) ? THREE.RedFormat : THREE.LuminanceFormat;
+
+                uniforms = {
+                    tAudioData: { value: new THREE.DataTexture(analyser.data, 16, 2, format) }
+                };
+
+                const material = new THREE.ShaderMaterial({
+                    uniforms: uniforms,
+                    vertexShader: `
+                        uniform sampler2D tAudioData;
+                        varying float vAmplitude;
+                        void main() {
+                            vec3 newPosition = position;
+                            float amp = texture2D(tAudioData, vec2(uv.x, 0.0)).r;
+                            newPosition.z += amp * 50.0;
+                            vAmplitude = amp;
+                            gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
+                        }
+                    `,
+                    fragmentShader: `
+                        varying float vAmplitude;
+                        void main() {
+                            vec3 color1 = vec3(0.98, 0.8, 0.2); // gold
+                            vec3 color2 = vec3(0.85, 0.53, 0.02); // dark-gold
+                            gl_FragColor = vec4(mix(color2, color1, vAmplitude * 2.0), 1.0);
+                        }
+                    `,
+                    wireframe: true
+                });
+
+                const geometry = new THREE.PlaneGeometry(800, 800, 40, 40);
+                const mesh = new THREE.Mesh(geometry, material);
+                mesh.rotation.x = -Math.PI / 2.5;
+                scene.add(mesh);
+
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                container.appendChild(renderer.domElement);
+
+                window.addEventListener('resize', onWindowResize, false);
+                container.addEventListener('mousemove', onMouseMove, false);
+            }
+
+            function onWindowResize() {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+
+            function onMouseMove(event) {
+                const mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+                const mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+                camera.position.x = mouseX * 50;
+                camera.position.y = mouseY * 50;
+            }
+
+            function animateWave() {
+                requestAnimationFrame(animateWave);
+                analyser.getFrequencyData();
+                uniforms.tAudioData.value.needsUpdate = true;
+                camera.lookAt(scene.position);
+                renderer.render(scene, camera);
+            }
+
+            initWave();
+            animateWave();
+        });
+    </script>
+</body>
+</html>
+
