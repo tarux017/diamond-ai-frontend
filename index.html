@@ -682,6 +682,10 @@
             const container = document.getElementById('dynamic-wave-container');
 
             function initWave() {
+                if (typeof THREE === 'undefined') {
+                    console.error('Three.js has not loaded yet.');
+                    return;
+                }
                 scene = new THREE.Scene();
                 camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 1, 10000);
                 camera.position.z = 300;
@@ -759,8 +763,13 @@
                 renderer.render(scene, camera);
             }
 
-            initWave();
-            animateWave();
+            const threeJsCheckInterval = setInterval(() => {
+                if (typeof THREE !== 'undefined') {
+                    clearInterval(threeJsCheckInterval);
+                    initWave();
+                    animateWave();
+                }
+            }, 100);
         });
     </script>
 </body>
